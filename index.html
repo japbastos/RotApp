@@ -1,0 +1,85 @@
+<html>
+
+<head>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
+<script src='script.js'></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h1>Rotação dos Motores</h1>
+    </div>
+
+      <div class="panel-body">
+        <div class="col-lg-12">
+          <div class="col-lg-3 form-group">
+              <div class="col-lg-12 form-group">
+                <label>Selecione Motor</label>
+                <select>
+                  <option value="mtr1">1</option>
+                  <option value="mtr2">2</option>
+                  <option value="mtr3">3</option>
+                  <option value="mtr4">4</option>
+                </select>
+              </div>
+              <div class="col-lg-12 form-group">
+                <input id="btnPlot" value="Plotar Grafico" class="btn btn-primary form-control" type="submit" (click)='PlotarGraph()' />
+              </div>
+
+              
+            </div>
+        </div>
+      </div>
+
+    <div id='grph1'>
+      <canvas id="myCanvas"></canvas>
+
+      <script>
+      var ctx = document.getElementById('myCanvas').getContext('2d');
+      var config = {
+          // The type of chart we want to create
+          type: 'line',
+
+          // The data for our dataset
+          data: {
+              labels: ["3.3 V", "5 V", "9 V", "12 V", "24 V"],
+              datasets: [{
+                  label: "Motor 1",
+      			fill:false,
+                  backgroundColor: 'rgb(255, 99, 132)',
+                  borderColor: 'rgb(255, 99, 132)',
+                  data: [0, 10, 20, 30, 40],
+              },
+      		{
+                  label: "Motor 2",
+      			fill:false,
+                  backgroundColor: 'rgb(99, 99, 255)',
+                  borderColor: 'rgb(99, 99, 255)',
+                  data: [0, 5, 25, 25, 45],
+              }]
+          },
+
+          // Configuration options go here
+          options: {}
+      };
+      var chart = new Chart(ctx, config);
+
+      </script>
+
+    </div>
+
+     <div class="panel-footer">
+        <p>Sistema para Exibição de dados sobre Rotação de Motores</p>
+     </div>
+
+  </div>
+</div>
+
+Ola, seja bem vindo!
+
+http://jsfiddle.net/ucdwmu11/1/
+</body>
+</html>
