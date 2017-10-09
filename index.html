@@ -89,13 +89,17 @@
                 data[4] = voltages[voltage]["rpm_indutive"];
             });
 
+            let color = 'rgb(' + Math.floor(Math.random() * 1000 % 255) + ', ' + Math.floor(Math.random() * 1000 % 255) +  ', '+ Math.floor(Math.random() * 1000 % 255) +')';
             var dataset = {
               label           : 'Motor ' + currentKey,
               fill            : false,
-              backgroundColor : 'rgb(255, 99, 132)',
-              borderColor     : 'rgb(255, 99, 132)',
+              backgroundColor : color,
+              borderColor     : color,
               data            : data
             };
+
+
+            console.log(dataset);
 
             datasets.push(dataset);
           });
@@ -113,9 +117,19 @@
                 yAxes: [{
                   ticks: {
                     beginAtZero:true
+                  },
+                  scaleLabel: {
+                    display: true,
+                    labelString: 'RPM'
+                  }
+                }],
+                xAxes: [{
+                  scaleLabel: {
+                    display: true,
+                    labelString: 'Tensão'
                   }
                 }]
-              }
+              },
             }
           };
 
