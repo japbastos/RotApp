@@ -1,85 +1,137 @@
 <html>
 
-<head>
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
-<script src='script.js'></script>
-</head>
-<body>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- <script src='script.js'></script> -->
+  </head>
+  <body>
 
-<div class="container">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h1>Rotação dos Motores</h1>
-    </div>
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="text-center">RPM</h1>
+        </div>
 
-      <div class="panel-body">
-        <div class="col-lg-12">
-          <div class="col-lg-3 form-group">
-              <div class="col-lg-12 form-group">
-                <label>Selecione Motor</label>
-                <select>
-                  <option value="mtr1">1</option>
-                  <option value="mtr2">2</option>
-                  <option value="mtr3">3</option>
-                  <option value="mtr4">4</option>
-                </select>
-              </div>
-              <div class="col-lg-12 form-group">
-                <input id="btnPlot" value="Plotar Grafico" class="btn btn-primary form-control" type="submit" (click)='PlotarGraph()' />
-              </div>
-
-              
+        <div class="card-body">
+          <div class="form-row align-items-center">
+            <div class="col-auto">
+              <label class="mr-sm-2" for="inlineFormCustomSelect">Selecione o motor:</label>
+              <select class="custom-select mb-2 mr-sm-2 mb-sm-0" id="selector">
+                <option selected>1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
             </div>
+            <div class="col-auto">
+              <button id="btnPlot" type="button" class="btn btn-primary" onclick="drawLineChart()">Plotar gráfico</button>
+            </div>
+          </div>
+
+          <div id='grph1' class="col-lg-12">
+            <canvas id="myCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="card-footer">
+           <p>Instrumentação Eletrônica - CECOMP - UNIVASF - 2017</p>
         </div>
       </div>
-
-    <div id='grph1'>
-      <canvas id="myCanvas"></canvas>
-
-      <script>
-      var ctx = document.getElementById('myCanvas').getContext('2d');
-      var config = {
-          // The type of chart we want to create
-          type: 'line',
-
-          // The data for our dataset
-          data: {
-              labels: ["3.3 V", "5 V", "9 V", "12 V", "24 V"],
-              datasets: [{
-                  label: "Motor 1",
-      			fill:false,
-                  backgroundColor: 'rgb(255, 99, 132)',
-                  borderColor: 'rgb(255, 99, 132)',
-                  data: [0, 10, 20, 30, 40],
-              },
-      		{
-                  label: "Motor 2",
-      			fill:false,
-                  backgroundColor: 'rgb(99, 99, 255)',
-                  borderColor: 'rgb(99, 99, 255)',
-                  data: [0, 5, 25, 25, 45],
-              }]
-          },
-
-          // Configuration options go here
-          options: {}
-      };
-      var chart = new Chart(ctx, config);
-
-      </script>
-
     </div>
 
-     <div class="panel-footer">
-        <p>Sistema para Exibição de dados sobre Rotação de Motores</p>
-     </div>
 
-  </div>
-</div>
+    <script>
+      function drawLineChart() {
+            var baseUrl = "http://rpmreadapi.herokuapp.com/motor/";
+            var sel = document.getElementById("selector");
+            var fullUrl = baseUrl.concat(sel.options[sel.selectedIndex].value);
+            console.log(fullUrl);
+            var jsonData = $.ajax({
+              url: fullUrl,
+              dataType: 'json',
+            }).done(function(results){
 
-Ola, seja bem vindo!
+              var labels = [], motor_number=[], data=[];
+              let data3_3=[], data5=[], data9=[], data12=[], data24=[];
 
-http://jsfiddle.net/ucdwmu11/1/
-</body>
+              console.log(results);
+              results.forEach(function(read) {
+                if(parseFloat(read.voltage) == 3.3){
+                  data3_3.push(parseFloat(read.rpm_indutivo));
+                }
+                else if (parseFloat(read.voltage) == 5) {
+                  data5.push(parseFloat(read.rpm_indutivo));
+                }
+                else if (parseFloat(read.voltage) == 9) {
+                  data9.push(parseFloat(read.rpm_indutivo));
+                }
+                else if (parseFloat(read.voltage) == 12) {
+                  data12.push(parseFloat(read.rpm_indutivo));
+                }
+                else {
+                  data24.push(parseFloat(read.rpm_indutivo));
+                }
+
+              });
+
+              let aux = [];
+              aux[0] = data3_3.reduce((previous, current) => current += previous, 0);
+              aux[1] = data5.reduce((previous, current) => current += previous, 0);
+              aux[2] = data9.reduce((previous, current) => current += previous, 0);
+              aux[3] = data12.reduce((previous, current) => current += previous, 0);
+              aux[4] = data24.reduce((previous, current) => current += previous, 0);
+              aux[5] = data3_3.length;
+              aux[6] = data5.length;
+              aux[7] = data9.length;
+              aux[8] = data12.length;
+              aux[9] = data24.length;
+
+              console.log(aux.length/2);
+
+              for (i= 0; i < (aux.length/2); i++){
+                if(aux[i+5] != 0) data.push(aux[i]/aux[i+5]);
+                else data.push(null);
+              }
+              console.log(data);
+              //console.log(labels);
+
+              // Create the chart.js data structure
+              var config = {
+                // The type of chart we want to create
+                type: 'line',
+                data: {
+                  labels : ["3.3 V", "5 V", "9 V", "12 V", "24 V"],
+                  datasets : [{
+                      label: 'Motor ' + sel.options[sel.selectedIndex].value,
+                      fill:false,
+                      backgroundColor: 'rgb(255, 99, 132)',
+                      borderColor: 'rgb(255, 99, 132)',
+                      data                  : data
+                  }]
+                },
+                options: {
+                  scales: {
+                    yAxes: [{
+                      ticks: {
+                        beginAtZero:true
+                      }
+                    }]
+                  }
+                }
+              };
+
+              // Get the context of the canvas element we want to select
+              var ctx = document.getElementById("myCanvas").getContext("2d");
+
+              // Instantiate a new chart
+              var myLineChart = new Chart(ctx, config);
+            });
+          }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+  </body>
 </html>
