@@ -16,18 +16,7 @@
 
         <div class="card-body">
           <div class="form-row align-items-center">
-            <div class="col-auto">
-              <label class="mr-sm-2" for="inlineFormCustomSelect">Selecione o motor:</label>
-              <select class="custom-select mb-2 mr-sm-2 mb-sm-0" id="selector">
-                <option selected>1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
-            </div>
-            <div class="col-auto">
-              <button id="btnPlot" type="button" class="btn btn-primary" onclick="drawLineChart()">Plotar gráfico</button>
-            </div>
+            
           </div>
 
           <div id='grph1' class="col-lg-12">
@@ -44,91 +33,106 @@
 
     <script>
       function drawLineChart() {
-            var baseUrl = "http://rpmreadapi.herokuapp.com/motor/";
-            var sel = document.getElementById("selector");
-            var fullUrl = baseUrl.concat(sel.options[sel.selectedIndex].value);
-            console.log(fullUrl);
-            var jsonData = $.ajax({
-              url: fullUrl,
-              dataType: 'json',
-            }).done(function(results){
+        var url = "https://rpmreadapi.herokuapp.com/reads";
 
-              var labels = [], motor_number=[], data=[];
-              let data3_3=[], data5=[], data9=[], data12=[], data24=[];
+        var jsonData = $.ajax({
+          url: url,
+          dataType: 'json',
+        }).done(function(results){
+          
+          var motors = {};
+                      
+          results.forEach(function(read) {
+            if(motors[read.motor_number] == null) 
+              motors[read.motor_number]= [];
 
-              console.log(results);
-              results.forEach(function(read) {
-                if(parseFloat(read.voltage) == 3.3){
-                  data3_3.push(parseFloat(read.rpm_indutivo));
-                }
-                else if (parseFloat(read.voltage) == 5) {
-                  data5.push(parseFloat(read.rpm_indutivo));
-                }
-                else if (parseFloat(read.voltage) == 9) {
-                  data9.push(parseFloat(read.rpm_indutivo));
-                }
-                else if (parseFloat(read.voltage) == 12) {
-                  data12.push(parseFloat(read.rpm_indutivo));
-                }
-                else {
-                  data24.push(parseFloat(read.rpm_indutivo));
-                }
+            motors[read.motor_number].push(read);
+          });
+          
+          var datasets = [];
+          
+          Object.keys(motors).forEach(function(currentKey) {
 
-              });
+            var voltages = {}; 
+            var data = [];
 
-              let aux = [];
-              aux[0] = data3_3.reduce((previous, current) => current += previous, 0);
-              aux[1] = data5.reduce((previous, current) => current += previous, 0);
-              aux[2] = data9.reduce((previous, current) => current += previous, 0);
-              aux[3] = data12.reduce((previous, current) => current += previous, 0);
-              aux[4] = data24.reduce((previous, current) => current += previous, 0);
-              aux[5] = data3_3.length;
-              aux[6] = data5.length;
-              aux[7] = data9.length;
-              aux[8] = data12.length;
-              aux[9] = data24.length;
-
-              console.log(aux.length/2);
-
-              for (i= 0; i < (aux.length/2); i++){
-                if(aux[i+5] != 0) data.push(aux[i]/aux[i+5]);
-                else data.push(null);
+            motors[currentKey].forEach(function(read) {
+              if(voltages[read.voltage] == null){
+                voltages[read.voltage] = {};
+                voltages[read.voltage]["rpm_indutive"] = [];
+                voltages[read.voltage]["rpm_optic"]   = [];
               }
-              console.log(data);
-              //console.log(labels);
 
-              // Create the chart.js data structure
-              var config = {
-                // The type of chart we want to create
-                type: 'line',
-                data: {
-                  labels : ["3.3 V", "5 V", "9 V", "12 V", "24 V"],
-                  datasets : [{
-                      label: 'Motor ' + sel.options[sel.selectedIndex].value,
-                      fill:false,
-                      backgroundColor: 'rgb(255, 99, 132)',
-                      borderColor: 'rgb(255, 99, 132)',
-                      data                  : data
-                  }]
-                },
-                options: {
-                  scales: {
-                    yAxes: [{
-                      ticks: {
-                        beginAtZero:true
-                      }
-                    }]
-                  }
-                }
-              };
-
-              // Get the context of the canvas element we want to select
-              var ctx = document.getElementById("myCanvas").getContext("2d");
-
-              // Instantiate a new chart
-              var myLineChart = new Chart(ctx, config);
+              voltages[read.voltage]["rpm_indutive"].push(read.rpm_indutivo);
+              voltages[read.voltage]["rpm_optic"].push(read.rpm_optico);
             });
-          }
+            
+            // Calculates the mean of RPM in a voltage
+            Object.keys(voltages).forEach(function(voltage) {
+              var sum = voltages[voltage]["rpm_indutive"].reduce(add, 0);
+              voltages[voltage]["rpm_indutive"] = sum / voltages[voltage]["rpm_indutive"].length;
+
+              sum = voltages[voltage]["rpm_optic"].reduce(add, 0);
+              voltages[voltage]["rpm_optic"] = sum / voltages[voltage]["rpm_optic"].length;
+            });
+
+            Object.keys(voltages).forEach(function(voltage) {
+              if(voltage == 3.3)
+                data[0] = voltages[voltage]["rpm_indutive"];
+              else if (voltage == 5)
+                data[1] = voltages[voltage]["rpm_indutive"];
+              else if (voltage == 9)
+                data[2] = voltages[voltage]["rpm_indutive"];
+              else if (voltage == 12)
+                data[3] = voltages[voltage]["rpm_indutive"];
+              else
+                data[4] = voltages[voltage]["rpm_indutive"];
+            });
+
+            var dataset = {
+              label           : 'Motor ' + currentKey,
+              fill            : false,
+              backgroundColor : 'rgb(255, 99, 132)',
+              borderColor     : 'rgb(255, 99, 132)',
+              data            : data
+            };
+
+            datasets.push(dataset);
+          });
+
+          // Create the chart.js data structure
+          var config = {
+            // The type of chart we want to create
+            type: 'line',
+            data: {
+              labels : ["3.3 V", "5 V", "9 V", "12 V", "24 V"],
+              datasets : datasets
+            },
+            options: {
+              scales: {
+                yAxes: [{
+                  ticks: {
+                    beginAtZero:true
+                  }
+                }]
+              }
+            }
+          };
+
+          // Get the context of the canvas element we want to select
+          var ctx = document.getElementById("myCanvas").getContext("2d");
+
+          // Instantiate a new chart
+          var myLineChart = new Chart(ctx, config);
+        });
+      }
+
+      // To use with reduce
+      function add(a, b) {
+          return a + b;
+      }
+
+      drawLineChart();
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
